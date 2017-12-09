@@ -90,7 +90,7 @@ public class MyWindow extends JFrame {
 
         //try to set up connection
         try {
-            socket = new Socket("localhost", port);
+            socket = new Socket("5.128.36.163", port);
             inputStream = new DataInputStream(socket.getInputStream());
             outputStream = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
