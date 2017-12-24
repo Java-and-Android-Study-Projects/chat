@@ -14,7 +14,7 @@ public class Storage {
         }
     }
 
-    public void save(long time, String author, String message) {
+    public synchronized void save(long time, String author, String message) {
         try {
             PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO messages (time, author, text) VALUES (?, ?, ?);");
@@ -58,7 +58,7 @@ public class Storage {
         return result;
     }
 
-    public void clear() {
+    public synchronized void clear() {
         try {
             Statement statement = connection.createStatement();
             statement.executeUpdate("DELETE FROM messages;");

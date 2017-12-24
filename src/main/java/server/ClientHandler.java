@@ -10,7 +10,7 @@ import java.net.Socket;
 import static server.MyServer.*;
 
 public class ClientHandler implements Runnable{
-    private static Storage storage;
+    private Storage storage;
     public static long MAX_LOGIN_TIME_MILLIS = 120000;
 
     private String nick;
@@ -22,8 +22,8 @@ public class ClientHandler implements Runnable{
     DataInputStream in;
     DataOutputStream out;
 
-    public ClientHandler(MyServer server, Socket socket) {
-        storage = new Storage();
+    public ClientHandler(MyServer server, Socket socket, Storage storage) {
+        this.storage = storage;
         this.socket = socket;
         this.server = server;
         authService = new BaseAuthService();
@@ -106,7 +106,6 @@ public class ClientHandler implements Runnable{
             e.printStackTrace();
         }finally{
             System.out.println("Client disconnected");
-            storage.close();
             server.unsubscribe(this);
             isAuthorized = false;
             try {

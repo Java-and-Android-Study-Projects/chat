@@ -12,6 +12,8 @@ public class MyServer {
     private Vector<ClientHandler> clients;
 
     public MyServer(int port) {
+        Storage storage = new Storage();
+
         try {
             clients = new Vector<>();
 
@@ -20,7 +22,7 @@ public class MyServer {
 
             while (true) {
                 Thread thread = new Thread(
-                        new ClientHandler(this, serverSocket.accept()));
+                        new ClientHandler(this, serverSocket.accept(), storage));
                 thread.setDaemon(true);
                 thread.start();
                 System.out.println("Client connected");
@@ -31,6 +33,7 @@ public class MyServer {
         } finally {
             try {
                 serverSocket.close();
+                storage.close();
             } catch (IOException | NullPointerException e) {
                 e.printStackTrace();
             }
