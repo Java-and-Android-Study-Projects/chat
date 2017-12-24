@@ -1,10 +1,9 @@
 package server;
 
 import authorization.BaseAuthService;
+import message.Message;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 
 import static server.MyServer.*;
@@ -17,10 +16,10 @@ public class ClientHandler implements Runnable{
     private BaseAuthService authService;
     private boolean isAuthorized;
     private MyServer server;
-    Socket socket;
+    private Socket socket;
 
-    DataInputStream in;
-    DataOutputStream out;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
 
     public ClientHandler(MyServer server, Socket socket, Storage storage) {
         this.storage = storage;
@@ -28,8 +27,8 @@ public class ClientHandler implements Runnable{
         this.server = server;
         authService = new BaseAuthService();
         try {
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+            out = new ObjectOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             System.out.println("Couldn't build in/out data streams");
             e.printStackTrace();
@@ -120,9 +119,9 @@ public class ClientHandler implements Runnable{
         return nick;
     }
 
-    public void sendMessage(String msg){
+    public void sendMessage(Message msg){
         try{
-            out.writeUTF(msg);
+            out.writeObject(msg);
             out.flush();
         }catch(IOException e){
             e.printStackTrace();

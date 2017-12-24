@@ -1,5 +1,7 @@
 package message;
 
+import com.sun.scenario.effect.impl.prism.PrImage;
+
 import java.io.Serializable;
 
 /**
@@ -9,13 +11,52 @@ import java.io.Serializable;
 public class Message implements Serializable {
 
     private MessageType messageType;
+    private SystemCommand systemCommand;
     private String message;
+    private String from, to;
 
     public Message(){}
 
-    public Message(MessageType messageType, String message) {
-        this.messageType = messageType;
+    public Message(String message, String from, String to) {
+        this.messageType = MessageType.COMMON;
         this.message = message;
+        this.from = from;
+        this.to = to;
+    }
+
+    public Message(String message, SystemCommand systemCommand) {
+        this.messageType = MessageType.SYSTEM;
+        this.systemCommand = systemCommand;
+        this.message = message;
+    }
+
+    public Message(SystemCommand systemCommand) {
+        this.messageType = MessageType.SYSTEM;
+        this.systemCommand = systemCommand;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    public SystemCommand getSystemCommand() {
+        return systemCommand;
+    }
+
+    public void setSystemCommand(SystemCommand systemCommand) {
+        this.systemCommand = systemCommand;
     }
 
     public MessageType getMessageType() {
