@@ -14,11 +14,13 @@ public class Message implements Serializable {
     private SystemCommand systemCommand;
     private String message;
     private String from, to;
+    private String login, password;
 
     public Message(){}
 
     public Message(String message, String from, String to) {
         this.messageType = MessageType.COMMON;
+        this.systemCommand = SystemCommand.WHISPER;
         this.message = message;
         this.from = from;
         this.to = to;
@@ -33,6 +35,22 @@ public class Message implements Serializable {
     public Message(SystemCommand systemCommand) {
         this.messageType = MessageType.SYSTEM;
         this.systemCommand = systemCommand;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getFrom() {

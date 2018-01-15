@@ -2,13 +2,14 @@ package server;
 
 import authorization.BaseAuthService;
 import message.Message;
+import message.SystemCommand;
 
 import java.io.*;
 import java.net.Socket;
 
-import static server.MyServer.*;
+import static message.SystemCommand.*;
 
-public class ClientHandler implements Runnable{
+public class ClientHandler implements Runnable {
     private Storage storage;
     public static long MAX_LOGIN_TIME_MILLIS = 120000;
 
@@ -39,74 +40,104 @@ public class ClientHandler implements Runnable{
     public void run() {
         long startedTime = System.currentTimeMillis();
 
-        try{
+        try {
             Thread timer = new Thread(() -> {
                 while (true) {
                     long timePassed = System.currentTimeMillis() - startedTime;
                     if (MAX_LOGIN_TIME_MILLIS < timePassed && !isAuthorized) {
-                        sendMessage("Waited to long...");
-                        sendMessage(END);
+                        sendMessage(new Message("Waited too long...", SystemCommand.END));
                         break;
                     }
                 }
             });
             timer.start();
 
+            Message message;
+
             //authorize client
-            while(!socket.isClosed()){
-                String str = in.readUTF();
-                if(str.startsWith(AUTH)){
-                    String[] elements = str.split("\\s");
-                    String login = elements[1];
-                    String pass = elements[2];
-                    nick = authService.getNickByLoginPass(login, pass);
+            while (!socket.isClosed()) {
+                try {
+                    message = (Message) in.readObject();
 
-                    if (server.isNickTaken(nick)) {
+                    if (message.getSystemCommand().equals(AUTH)) {
+                        String login = message.getLogin();
+                        String pass = message.getPassword();
 
-                        sendMessage(nick + " is already logged in");
+                        // TODO: 1/15/18 check for null
+                        nick = authService.getNickByLoginPass(login, pass);
 
-                    } else if(authService.correctPassword(login, pass)){
-                        isAuthorized = true;
-                        sendMessage(AUTH_OK);
-                        server.subscribe(this);
-                        System.out.println("Client " + nick + " is authorized");
+                        //check if the user has already logged in
+                        if (server.isNickTaken(nick)) {
+                            sendMessage(new Message(nick + " is already logged in", NOTIFICATION));
 
-                        //show previous messages
-                        sendMessage(storage.getAllMessages().toString());
-                        break;
+                        }
 
-                    } else {
-                        sendMessage("Wrong password or username");
+                        //check if the password is correct
+                        else if (authService.isPasswordCorrect(login, pass)) {
+                            isAuthorized = true;
+                            sendMessage(new Message(AUTH_OK));
+                            server.subscribe(this);
+                            System.out.println("Client " + nick + " is authorized");
+
+                            //show previous messages
+                            sendMessage(new Message(storage.getAllMessages().toString(), MESSAGE_HISTORY));
+                            break;
+
+                        }
+
+                        //password is not correct or no such login
+                        else {
+                            sendMessage(new Message("Wrong password or username", NOTIFICATION));
+                        }
+
                     }
 
-                } else sendMessage("Need to authorize first");
+                    //if not auth message
+                    else sendMessage(new Message("Need to authorize first", NOTIFICATION));
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
 
             //chat
-            while(true){
-                String msg = in.readUTF();
-                if(msg.equalsIgnoreCase(END)) {
-                    break;
-                }
+            while (true) {
+                try {
+                    message = (Message) in.readObject();
 
-                if(msg.startsWith(WHISPER)){
-                    String[] string = msg.split("\\s", 3);
-                    String nameTo = string[1];
-//                    String message = str.substring(4 + nameTo.length());
-                    String message = string[2];
-                    server.sendMessageTo(this, nameTo, message);
-                }else{
-                    storage.save(System.currentTimeMillis(), nick, msg);
-                    msg = nick + ": " + msg;
-                    server.broadcast(msg);
+                    if (message.getSystemCommand() != null) {
+                        if (message.getSystemCommand().equals(END)) {
+                            break;
+                        }
+
+                        if (message.getSystemCommand().equals(WHISPER)) {
+                            server.sendMessageTo(message);
+                        }
+                    } else {
+                        if (message.getMessage() != null)
+                            storage.save(System.currentTimeMillis(), nick, message.getMessage());
+                        server.broadcast(message);
+                    }
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
+        } finally {
             System.out.println("Client disconnected");
             server.unsubscribe(this);
             isAuthorized = false;
+
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             try {
                 socket.close();
             } catch (IOException e) {
@@ -119,11 +150,11 @@ public class ClientHandler implements Runnable{
         return nick;
     }
 
-    public void sendMessage(Message msg){
-        try{
+    public void sendMessage(Message msg) {
+        try {
             out.writeObject(msg);
             out.flush();
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

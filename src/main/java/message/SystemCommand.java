@@ -5,6 +5,6 @@ package message;
  */
 public enum SystemCommand {
 
-    AUTH, AUTH_OK, END, USERS_LIST, WHISPER;
+    AUTH, AUTH_OK, END, USERS_LIST, WHISPER, NOTIFICATION, MESSAGE_HISTORY;
 
 }

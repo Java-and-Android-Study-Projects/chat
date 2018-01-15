@@ -57,40 +57,26 @@ public class MyServer {
             sb.append(" ");
             sb.append(s);
         });
-
-        StringBuffer sb = new StringBuffer();
-        for(ClientHandler c: clients){
-            sb.append(" ");
-            sb.append(c.getNick());
-        }
         Message msg = new Message(sb.toString(), SystemCommand.USERS_LIST);
-        for(ClientHandler c: clients){
-            c.sendMessage(msg);
-        }
-    }
-    public synchronized void sendMessageTo(Message msg){
-        for(ClientHandler c: clients){
-            if(c.getNick().equalsIgnoreCase(msg.getTo())){
-                c.sendMessage(msg);
-                break;
-            }
-        }
 
+        clients.forEachValue(clients.size(), h -> h.sendMessage(msg));
     }
 
-    public synchronized void subscribe(ClientHandler client) {
-        clients.add(client);
+    public void sendMessageTo(Message msg){
+        clients.get(msg.getTo()).sendMessage(msg);
+    }
+
+    public void subscribe(ClientHandler client) {
+        clients.put(client.getNick(), client);
         broadcastUserList();
     }
 
-    public synchronized void unsubscribe(ClientHandler client) {
-        clients.remove(client);
+    public void unsubscribe(ClientHandler client) {
+        clients.remove(client.getNick());
         broadcastUserList();
     }
 
-    public synchronized void broadcast(String msg) {
-        for (ClientHandler client : clients) {
-            client.sendMessage(msg);
-        }
+    public void broadcast(Message msg) {
+        clients.forEachValue(clients.size(), h -> h.sendMessage(msg));
     }
 }

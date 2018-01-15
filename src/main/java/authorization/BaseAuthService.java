@@ -25,7 +25,7 @@ public class BaseAuthService implements AuthService{
         entries.add(new Entry("three", "three", "three"));
     }
 
-    public boolean correctPassword(String login, String pass) {
+    public boolean isPasswordCorrect(String login, String pass) {
         for (Entry entry : entries) {
             if (entry.login.equals(login) && entry.pass.equals(pass))
                 return true;
